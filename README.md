@@ -1,200 +1,183 @@
-Proxy ORDS - Backend API 
+Proxy ORDS - Backend API
 
-Descripción del Proyecto 
+DESCRIPCIÓN DEL PROYECTO
 
-Este proyecto es un servicio backend intermedio (Proxy) desarrollado en Python con FastAPI. Su objetivo es interactuar con una base de datos Oracle, expuesta vía ORDS (Oracle REST Data Services). 
+Este proyecto es un servicio backend intermedio (Proxy) desarrollado en Python con FastAPI.
+Su propósito es actuar como una capa de lógica de negocio entre los consumidores del API y una base de datos Oracle expuesta mediante ORDS (Oracle REST Data Services).
 
-El sistema actúa como una capa de lógica de negocio que valida datos, previene duplicados y gestiona errores antes de persistir la información en la base de datos. 
+El sistema valida datos, previene duplicados y maneja errores antes de persistir la información en la base de datos, garantizando integridad y estabilidad del servicio.
 
- 
 
-Tecnologías Utilizadas 
+TECNOLOGÍAS UTILIZADAS
 
-Lenguaje: Python 3.9+ 
+- Lenguaje: Python 3.9+
+- Framework Web: FastAPI
+- Servidor ASGI: Uvicorn
+- Cliente HTTP Asíncrono: HTTPX
+- Validación de Datos: Pydantic, Email-Validator
+- Variables de Entorno: Python-dotenv
+- Base de Datos: Oracle (expuesta vía ORDS)
 
-Framework Web: FastAPI 
 
-Servidor: Uvicorn 
+CARACTERÍSTICAS Y REGLAS DE NEGOCIO
 
-Cliente HTTP Asíncrono: HTTPX 
+Prevención de duplicados:
+- No permite crear ni actualizar clientes con un documento o email que ya exista en otro registro.
+- Retorna error 409 Conflict en caso de duplicidad.
 
-Validación de Datos: Pydantic & Email-Validator 
+Validación de datos:
+- Normalización de correos electrónicos (no sensible a mayúsculas/minúsculas).
+- Validación de formato de email.
+- Validación de campos obligatorios mediante Pydantic.
 
-Variables de Entorno: Python-dotenv 
+Manejo de errores:
+- 200 OK: Operación exitosa.
+- 404 Not Found: Cliente no encontrado.
+- 409 Conflict: Documento o email duplicado.
+- 502 Bad Gateway: Error de comunicación con ORDS.
+- 500 Internal Server Error: Error inesperado controlado.
 
- 
+Nota:
+El servidor captura y gestiona internamente errores inesperados para evitar la caída del servicio.
 
-Características y Reglas de Negocio 
+Filtrado:
+- Búsqueda por email.
+- Búsqueda por documento.
+- Búsqueda por estado del lead.
 
-El API implementa las siguientes validaciones: 
 
-Prevención de Duplicados: 
+INSTALACIÓN Y CONFIGURACIÓN
 
-No permite crear ni actualizar clientes con un Documento o Email que ya exista en otro registro. 
+1. Clonar el repositorio
+Clona el proyecto en tu máquina local.
 
-Devuelve error 409 Conflict en caso de duplicidad. 
+2. Crear un entorno virtual (recomendado)
 
-Validación de Datos: 
+python -m venv venv
 
-Normalización de emails (insensible a mayúsculas/minúsculas). 
+Activación del entorno virtual:
 
-Validación de formato de correo electrónico. 
+Windows:
+.\venv\Scripts\activate
 
-Validación de campos obligatorios. 
+Mac / Linux:
+source venv/bin/activate
 
-Manejo de Errores: 
+3. Instalar dependencias
 
-404 Not Found: Si el cliente a consultar o actualizar no existe. 
+pip install fastapi uvicorn httpx python-dotenv pydantic email-validator
 
-502 Bad Gateway: Si falla la conexión con ORDS. 
+4. Configurar variables de entorno
 
-500 Internal Server Error: Errores inesperados controlados. 
-Nota:(El servidor captura, arregla y gestiona internamente cualquier fallo inesperado para evitar la caída del servicio.)
+Crear un archivo .env en la raíz del proyecto con el siguiente contenido:
 
-200 OK: Proceso existoso. 
+ORDS_URL=https://gabdddcba32cc06-agenteaidb.adb.us-ashburn-1.oraclecloudapps.com/ords/admin/clientes_seguros
 
-Filtrado: 
 
-Búsqueda por email, documento y estado. 
+EJECUCIÓN DEL PROYECTO
 
+Para iniciar el servidor en modo desarrollo:
 
+python -m uvicorn main:app --reload
 
-Instalación y Configuración 
+El servicio quedará disponible en:
+http://127.0.0.1:8000
 
-1. Clonar el repositorio 
 
-Descarga el código fuente en tu máquina local. 
+DOCUMENTACIÓN Y PRUEBAS
 
-2. Crear un entorno virtual (Recomendado) 
+FastAPI genera documentación automática mediante Swagger UI.
 
-En tu terminal (PowerShell o Bash): 
+Accede desde tu navegador a:
+http://127.0.0.1:8000
 
-python -m venv venv 
-# Activar en Windows: 
-.\venv\Scripts\activate 
-# Activar en Mac/Linux: 
-source venv/bin/activate 
+Desde allí podrás probar todos los endpoints disponibles.
 
-3. Instalar dependencias 
 
-Ejecuta el siguiente comando para instalar todas las librerías necesarias: 
+ENDPOINTS DISPONIBLES
 
-pip install fastapi uvicorn httpx python-dotenv pydantic email-validator 
+POST /api/clientes
+- Crear un nuevo cliente.
 
-4. Configurar Variables de Entorno 
+GET /api/clientes
+- Listar clientes con filtros opcionales por email, documento o estado_lead.
 
-Crea un archivo llamado .env en la raíz del proyecto y agrega la URL base de ORDS: 
+GET /api/clientes/{id}
+- Obtener el detalle de un cliente por su ID.
 
-ORDS_URL=https://gabdddcba32cc06-agenteaidb.adb.us-ashburn-1.oraclecloudapps.com/ords/admin/clientes_seguros 
+PUT /api/clientes/{id}
+- Actualizar un cliente existente validando duplicados.
 
 
+EJEMPLOS DE USO CON CURL 
 
-Ejecución del Proyecto 
+Crear un cliente:
 
-Para iniciar el servidor de desarrollo, ejecuta el siguiente comando en la terminal: 
+curl -X POST ^
+  http://127.0.0.1:8000/api/clientes ^
+  -H "Content-Type: application/json" ^
+  -d "{
+    \"nombre\": \"Juan\",
+    \"apellido\": \"Perez\",
+    \"email\": \"juan.perez@example.com\",
+    \"documento_numero\": \"100200300\",
+    \"telefono\": \"555-0199\",
+    \"estado_lead\": \"Nuevo\"
+  }"
 
-python -m uvicorn main:app --reload 
+Listar clientes por estado:
 
-Si todo es correcto, verás un mensaje indicando que el servidor corre en: http://127.0.0.1:8000 
+curl -X GET ^
+  http://127.0.0.1:8000/api/clientes?estado_lead=Nuevo ^
+  -H "accept: application/json"
 
+Obtener cliente por ID:
 
+curl -X GET ^
+  http://127.0.0.1:8000/api/clientes/21 ^
+  -H "accept: application/json"
 
-Documentación y Pruebas (Swagger UI) 
+Actualizar cliente:
 
-El proyecto incluye documentación interactiva automática. 
+curl -X PUT ^
+  http://127.0.0.1:8000/api/clientes/21 ^
+  -H "Content-Type: application/json" ^
+  -d "{
+    \"nombre\": \"Juan\",
+    \"apellido\": \"Perez\",
+    \"email\": \"juan.perez@example.com\",
+    \"documento_numero\": \"100200300\",
+    \"telefono\": \"555-9999\",
+    \"estado_lead\": \"Contactado\"
+  }"
 
-Abre tu navegador web. 
+PRUEBAS CON POSTMAN
 
-Ingresa a: http://127.0.0.1:8000 
+Para facilitar la validación de los endpoints, se incluye en el repositorio el archivo postman_collection.json. Este archivo contiene una colección preconfigurada con todas las peticiones listas para usar.
 
-Serás redirigido automáticamente a la interfaz de Swagger UI. 
+¿Cómo importar la colección?
+1. Abre Postman.
+2. Haz clic en el botón "Import" (ubicado en la esquina superior izquierda).
+3. Arrastra el archivo postman_ejemplos.json o selecciónalo desde tu carpeta del proyecto.
+4. Una vez importado, verás una carpeta llamada "Proxy ORDS Seguros" en tu panel de colecciones.
+5. Asegúrate de que tu servidor esté corriendo (python -m uvicorn main:app --reload) y ejecuta las peticiones.
 
-Desde allí podrás probar todos los endpoints directamente: 
 
-Endpoints Disponibles 
+ESTRUCTURA DEL PROYECTO
 
-POST /api/clientes: Crear un nuevo cliente. 
+/
+├── Controllers/
+│   └── clientes.py        Definición de endpoints
+├── ORDS/
+│   └── cliente_ords.py    Cliente HTTP para ORDS
+├── Services/
+│   └── cliente_service.py Lógica de negocio
+├── models.py              Modelos Pydantic
+├── main.py                Punto de entrada
+├── .env                   Variables de entorno
+└── README.txt             Documentación del proyecto
 
-GET /api/clientes: Listar clientes (permite filtros por email, documento, estado_lead). 
 
-GET /api/clientes/{id}: Obtener el detalle de un cliente específico. 
+NOTAS FINALES
 
-PUT /api/clientes/{id}: Actualizar un cliente existente (valida duplicados excluyendo al propio usuario). 
-
-Ejemplos de Uso de Endpoints
-
-A continuación se detallan ejemplos prácticos de cómo consumir los servicios del API utilizando curl. También puedes probarlos directamente desde la interfaz de Swagger (/docs). 
-
-1. Crear un Cliente (POST) 
-
-Crea un nuevo registro validando que el email y el documento no existan previamente. 
-
-URL: /api/clientes 
-
-curl -X 'POST' \ 
- 'http://127.0.0.1:8000/api/clientes' \ 
- -H 'Content-Type: application/json' \ 
- -d '{ 
- "nombre": "Juan", 
- "apellido": "Perez", 
- "email": "juan.perez@example.com", 
- "documento_numero": "100200300", 
- "telefono": "555-0199", 
- "estado_lead": "Nuevo" 
-}' 
-
-2. Listar Clientes con Filtros (GET) 
-
-Obtiene la lista de clientes. Puedes filtrar por email, documento o estado_lead. 
-
-URL: /api/clientes 
-Ejemplo: Filtrar por estado "Nuevo" 
-
-curl -X 'GET' \ 
- 'http://127.0.0.1:8000/api/clientes?estado_lead=Nuevo' \ 
- -H 'accept: application/json' 
-
-3. Obtener Cliente por ID (GET) 
-
-Busca un cliente específico por su identificador único. 
-
-URL: /api/clientes/{id} 
-Ejemplo: Buscar el ID 21 
-
-curl -X 'GET' \ 
- 'http://127.0.0.1:8000/api/clientes/21' \ 
- -H 'accept: application/json' 
-
-4. Actualizar Cliente (PUT) 
-
-Actualiza los datos de un cliente existente. El sistema validará que, si cambias el email o documento, estos no pertenezcan a otro usuario diferente. 
-
-URL: /api/clientes/{id} 
-Ejemplo: Actualizar el teléfono y estado del ID 21 
-
-curl -X 'PUT' \ 
- 'http://127.0.0.1:8000/api/clientes/21' \ 
- -H 'Content-Type: application/json' \ 
- -d '{ 
- "nombre": "Juan", 
- "apellido": "Perez", 
- "email": "juan.perez@example.com", 
- "documento_numero": "100200300", 
- "telefono": "555-9999", 
- "estado_lead": "Contactado" 
-}' 
-
-
-
-Estructura del Proyecto 
-/ 
-├── Controllers/ 
-│   └── clientes.py       # Definición de rutas (endpoints) y documentación 
-├── ORDS/ 
-│   └── cliente_ords.py   # Cliente HTTP para comunicarse con Oracle 
-├── Services/ 
-│   └── cliente_service.py # Lógica de negocio y validaciones 
-├── models.py             # Esquemas Pydantic (Validación de datos) 
-├── main.py               # Punto de entrada de la aplicación 
-├── .env                  # Variables de entorno (No incluido en repo) 
-└── README.md             # Este archivo 
+Este proyecto está diseñado como una capa intermedia segura y robusta entre los consumidores del API y una base de datos Oracle, asegurando validaciones, control de errores y estabilidad del servicio.
