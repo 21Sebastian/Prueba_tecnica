@@ -153,7 +153,7 @@ curl -X PUT ^
 
 PRUEBAS CON POSTMAN
 
-Para facilitar la validación de los endpoints, se incluye en el repositorio el archivo postman_collection.json. Este archivo contiene una colección preconfigurada con todas las peticiones listas para usar.
+Para facilitar la validación de los endpoints, se incluye en el repositorio el archivo postman_ejemplos.json. Este archivo contiene una colección preconfigurada con todas las peticiones listas para usar.
 
 ¿Cómo importar la colección?
 1. Abre Postman.
